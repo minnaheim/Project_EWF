@@ -1,0 +1,494 @@
+---
+title: "Heim_Hausarbeit"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+## Übung 1
+
+In diesem Teil der diesjaehrigen Hausarbeit arbeiten Sie mit den Daten einer Studie von David
+Card, einem der Nobelpreistraeger von 2021. Die Studie verwendet die Naehe zu einem College
+als Instrument fur Bildungsjahre, um die Bildungsrendite zu schaetzen (klicken Sie bei Interesse
+hier fur eine open access Version der Originalstudie).
+Verwenden Sie den Datensatz "Card1995.RData" mit Daten ausschliesslich fur Maenner aus
+dem Jahre 1976 mit folgenden Variablen:
+
+-   wage: Stundenlohn in \$ im Jahr 1976
+
+```{=html}
+<!-- -->
+```
+-   educ: Bildungsjahre
+
+-   nearc4: Dummyvariable. Eins, wenn in der N¨ahe eines 4-Jahres-College aufgewachsen
+
+-   black: Dummyvariable. Eins, wenn Afroamerikaner
+
+-   south66: Dummyvariable. Eins, wenn wohnhaft in Sudstaat im Jahr 1966
+
+-   smsa66: Dummyvariable. Eins, wenn wohnhaft in urbaner Gegend im Jahr 1966
+
+-   reg66X: Dummyvariable. Eins, wenn wohnhaft in Region X im Jahr 1966
+
+-   exper: Berufserfahrung in Jahren
+
+-   IQ: Intelligenzquotient
+
+-   age: Alter in Jahren
+
+### Teilfrage 1.1
+
+Fuehren Sie eine univariate Regression mit log(wage) als abhaengige und educ als erklaerende
+Variable durch. Interpretieren Sie die Koeffizienten und deren statistische Signifikanz. 
+
+
+```{r}
+load("Card1995.RData")
+summary(Card1995)
+```
+
+```{r}
+ols1.1 <- lm(log(wage) ~ educ, data = Card1995)
+summary(ols1.1)
+```
+Interpretation:
+Der Achsenabschnitt ist der durchschnittliche Lohn pro Stunde in USD, wenn Bildungsjahre gleich Null sind. 
+Der Steigungskoeffizient gibt an, dass wenn sich Bildung um 1 Jahr veraendert, aendert sich der Lohn um 5.209%. 
+Anhand des P-Werts sehen wir,dass beide Koeffizienten auf einem 0.001 Niveau Signifikant sind! 
+
+### Teilfrage 1.2
+
+Warum schaetzt die univariate Regression hoechstwahrscheinlich keinen kausalen Effekt?
+Welche Art von Endogenitaet liegt hier vermutlich vor? Geben Sie zwei konkrete Beispiele.
+
+In der Vorlesung haben wir zwei Arten von Endogenität kennengelernt. Omitted Variable und Reverse Causality. Hier können wir keinen kausalen Effekt schätzen, weil es Omitted Variables gibt.  Das bedeuted, dass eine erklärende Variable vergessen (ommited) wurde. Eine Variable kann omitted werden, wenn sie nicht beobachtbar und deshalb nicht ins Modell eingebaut werden konnte, oder die erklärende Variable war beobachtbar, aber wurde einfach vergessen. In der vorliegenden Übung wurden viele, bekannte Variablen ausgelassen, wie nearc4, black, south66,smsa66, reg66, exper, IQ und Age.
+Beispielfür Omitted Variables:
+Ich kann mir gut vorstellen, dass die Arbeitserfahrung eines Mannes einen grossen Einfluss auf dessen Einkommen hat. Mit mehr berufserfahrung ist ein Angestellter oft für Arbeitgeber produktiver. Ausserdem erspart sich somit der/die Arbeitgeber/in Fortbildungskosten, und das macht alles einen erfahren Arbeiter mehr attraktiv als einen Unerfahrenen,weshalb dieser auch höchstwahrscheinlich mehr verdienen würde.
+Es kann gut sein, dass IQ und Educ positiv korreliert sind. Desto höher das IQ, desto leichter fällt es einer Person neues zu lernen und umzusetzten.
+Dadurch, dass diese beiden Variablen aus der Regression ausgelassen (omitted) wurden, aber einen möglichen Einfluss auf die erklärte Variable haben, handelt es sich hier um omitted Variable.
+
+
+### Teilfrage 1.3
+
+Spezifizieren Sie im naechsten Schritt ein Modell mit Kontrollvariablen. Sie duerfen (muessen 
+aber nicht) saemtliche verfuegbaren Variablen mit Ausnahme von nearc4 verwenden. Kommentieren Sie kurz die Auswahl ihrer Kontrollvariablen und moegliche Trade-offs in der Auswahl.
+
+```{r}
+ols1.3.1 <- lm(log(wage) ~ educ + black + south66 + smsa66 + exper + IQ + age , data = Card1995)
+summary(ols1.3.1)
+```
+```{r}
+ols1.3.2 <- lm(south66 ~ reg665 + reg666 + reg667, data = Card1995)
+summary(ols1.3.2)
+```
+
+Auswahlkriterien:
+Ich habe alle gegebenen Variablen als Kontrollvariablen benutzt, ausser near4c, age und reg662, reg663, reg664, reg665, reg666, reg667, und reg669. Der Grund dafür, ist weil age bei der oberen OLS Regression einen NA Wert angibt, das ist ein Zeichen für Perfekte Multikollinearität. Tatsächlich, ist Age eine lineare Kombination aus zwei anderen unabhängigen Variablen. Age = Exper + Educ + 6. Deshalb, um die Dummy Variable Trap zu vermeiden, lasse ich die Variable Age aus, dann bekommen wir auch keine NA mehr angezeigt. 
+Ich benutzte auch Variablen reg665 - reg667 nicht als Kontrollvariablen, da diese, wenn wir sie mit south66 regressieren alle auf 1 geschätzt werden. Das bedeuted, dass alle Männer, die in südlichen Staaten leben, auch gleichzeitig in reg665, reg666, und reg667 leben, weil reg665 - reg667 südliche Regionen sind. Indem wir also reg665-reg667 nicht in die Regression geben, vermeiden wir perfekte Multikollieratität.(Bonus: wenn wir reg665-reg667 hinausgeben, anstatt south66 dann vermeiden wir den Effekt, der viele Kontrollvariablen hat auf die Varianz. Dadurch, dass wir weniger Kontrollvariablen in der Regression haben, haben wir kleinere Varianz.)
+Weiters lassen wir reg669 raus, weil es perfekt Multikollinear mit einem Wert in der OLS Regression ist. 
+Wir lassen auch reg 662-reg664 hinaus, weil die Variablen nicht Signifikant auf einem 0.1 Niveau sind. 
+
+Deshalb, schaut unsere OLS regression mit unseren Kontrollvariablen so aus:
+```{r}
+ols1.3.3 <- lm(log(wage) ~ educ + black + south66 + reg661 + reg668 + exper + IQ + smsa66 , data = Card1995)
+summary(ols1.3.3)
+```
+
+Ein Trade-off den wir in der Auswahl machen, ist dass wir eventuell eine Überspezifikation erzeugen, indem wir irrelevante Kontrollvariablen in die Regression hinzufügen. Die Konsequenz ist, dass der Schätzer von unserem beta trotzdem unverzerrt bleibt, aber, dass die Varianz sich vergrössert. Umgekehrt, wenn wir keine Kontrollvariablen inkludieren, kann es sein, dass wir Unterspezifizieren, und somit der Schätzer verzerren und Omitted Variable Bias (OVB) haben. Deshalb, obwohl wir hier vielleicht unnötigerweise zu viele Variablen inkludieren, ist es besser, auf Nummer sicher zu gehen, und die Kontrollvariable zu inkludieren, anstatt diese raus zu lassen, denn ein unverzerrter Schätzer ist wichtiger als eine kleine Varianz. Deshalb müssen wir mit dem Trade-off von einer höheren Varianz rechnen. 
+
+### Teilfrage 1.4
+
+Schaetzen Sie ein multivariates Regressionsmodell mit den zuvor ausgewaehlten Kontrollvariablen. Interpretieren Sie den Koeffizienten von educ. Vergleichen Sie das Resultat mit der univariaten Regression aus Teilaufgabe 1.1.
+
+```{r}
+ols1.4 <- lm(log(wage) ~ educ + black + south66 + reg661 + reg668 + exper + IQ + smsa66 , data = Card1995)
+summary(ols1.4)
+```
+Interpretation:
+Die Variable educ zeigt uns, um wie viel ein zusätzliches Bildungsjahr im durchschnitt das Einkommen eines Mannes vergroessert, alle anderen Werte gleicht bleibend. 
+
+In Teilfrage 1.1 hat educ den Wert 0.05209 angenommen. Das heisst, dass vorher ein zusätzliches Bildungsjahr das Einkommen des Mannes um 5.209 Prozent vergroessert hat. Mit der Inklusion der Kontrollvariablen nimmt educ jetzt den Wert 0.0680834 an. Das heisst, dass jetzt ein zusätzliches Bildungsjahr das Einkommen des Mannes um 6.73855 % vergroessert. Dadurch, dass wir mehr Kontrollvariablen inkludieren, merken wir, dass educ eigentlich einen groesseren Effekt auf das Einkommen hat. Das heisst, in der Simplen Regression wurde educ höchstwahrscheinlich unterschätzt.
+
+### Teilfrage 1.5
+
+Welche Annahmen muss eine Instrumentalvariable erfuellen? Sind die Annahmen testbar?
+
+Eine Instrumentalvariable (IV) muss folgende zwei Bedingungen erfuellen:
+
+1- Relevanz, heisst die Kovarianz zwischen der IV und des Regressoren darf nicht Null sein. Dann ist die IV ein starkes Instrument.
+
+2- Exogenität, heisst, dass die Kovarianz von der IV und des Residuums, Null sein muss. Dann enthält das Residuum keine systematische Information auf die IV.
+
+Die Annahme der Relevanz ist testbar, indem man xj auf die Konstanten und die IV regressiert. Exogenität ist nicht testbar, weil die Gültigkeit argumentiert werden muss, und nicht quantitativ ermittelt werden kann.
+
+### Teilfrage 1.6
+
+Ist nearc4 eine valide Instrumentalvariable fuer educ? Diskutieren Sie, ob nearc4 Ihre zuvor genannten
+Annahmen erfuellt. Testen Sie diese Annahmen, wenn moeglich. Falls Sie zum Schluss kommen, dass eine/mehrere Ihrer Annahmen verletzt ist/sind, erklaeren Sie weshalb.
+
+Wir testen zu beginn, Annahme 1, indem wir educ anhand von near4c regressieren:
+
+```{r}
+ols1.6 <- lm(educ ~ nearc4 , data = Card1995)
+summary(ols1.6)
+```
+Wir wissen, dass der Wert für nearc4 auch als COV(nearc4,educ)/Var(nearc4) geschrieben werden kann. Das heisst, damit die Annahme der Relevanz gilt (COV(xj,z) ≠ 0), muss near4c einfach ungleich Null sein.
+Wir können das testen, indem wir einen zweiseitigen t-Test machen. In dem Regressionsoutput ist schon der P-Wert gegeben, und wir sehen, dass nearc4 schon auf einem 0.01 Niveau Signifikant ist! 
+Das bedeuted, dass die Annahme der Relevanz bei nearc4 als Instrumentalvariable hält!
+
+Da wir Annahme 2 nicht testen können, müssen wir begründen, ob nearc4 mit dem Fehlerterm unkorreliert ist. Das können wir nicht so leicht annehmen, denn die Nähe zu einem 4-Jährigen College könnte zum Beispiel mit der Ausbildung der Eltern positiv korreliert sein. Da die Nähe zu einem College bedeuten könnte, dass die Eltern mit höherer Wahrscheinlichkeit das College besuchen, und auch deshalb höheres Einkommen haben.
+Deshalb, können wir nicht sicher sagen, dass nearc4 mit dem Fehlerterm unkorreliert ist.
+
+### Teilfrage 1.7
+Schätzen Sie den Effekt von educ auf log(wage), indem Sie nearc4 als Instrument benutzen. Einmal ohne Kontrollvariablen und einmal mit den Kontrollvariablen aus Teilaufgabe 3. Interpretieren Sie die Ergebnisse. Wie gross ist der Unterschied zu den Regressionen aus Teilaufgaben 1.1 und 1.4? Welches Resultat erscheint Ihnen am glaubwürdigsten und warum?
+
+```{r}
+library(AER)
+ols1.7.1 <-ivreg(log(wage) ~ educ | nearc4 , data = Card1995)
+summary(ols1.7.1)
+```
+```{r}
+library(AER)
+ols1.7.2 <-ivreg(log(wage) ~ educ + black + south66 + reg661 + reg668 + exper + IQ + smsa66 | nearc4 +  black + south66 + reg661 + reg668 + exper + IQ + smsa66 , data = Card1995)
+summary(ols1.7.2)
+
+```
+
+Interpretation:
+Sobald wir die Kontrollvariablen in die Regression geben, wird der geschätzte Wert von Bildungsjahren kleiner, vermutlich weil die zusätzlichen Variablen die anhängige Variable besser helfen zu erklären, und der zweite Regressionsoutput deshalb genauer als der Erste ist. 
+
+Die Regression in 1.1 lieferte 0.05209 als geschätzter Wert für Educ, wobei in 1.4 sich der Wert auf 0.0680834 vergrössert. Hier ist der Wert von educ, ohne Kontrollvariablen aber mit Instrumentalvariable auf 0.18806. Mit IV und Kontrollvariablen ist der Wert der Variable bei 0.1023283. 
+Wenn wir ohne IV schätzen, dann vergrössert sich der Wert bei der Addition von Kontrollvariablen um 0.0159934. 
+Wenn wir mit IV schätzen, dann verkleinert sich der Wert bei der Addition von Kontrollvariablen um 0.0857317. 
+
+Am glaubwürdigsten scheint mir die geschätzte Regression mit Kontrollvariablen, und ohne Instrumentalvariable. Dadurch, dass wir die Kontrollvariablen hinzugefügt haben, ist die wahrscheinlichkeit görsser, dass die geschätze Educ unverzerrt ist. Weiters, vertraue ich der Regression ohne iV mehr als der mit, weil ich in Teilaufgabe 1.6 die IV nearc4 abgelehnt habe, da Annahme 2 wahrscheinlich nicht zutrifft.
+
+## Übung 2
+
+In diesem Teil führen Sie eine Simulationsstudie durch, deren DGP lose an die Anwendung im ersten Teil angelehnt ist. Der Code Simulation Start.R implementiert dafür bereits folgende Schritte:
+• Setze Anzahl der Beobachtungen auf n = 3000
+• Ziehe die Instrumentalvariable z ∼ Binomial(0.7)
+• Ziehe eine Omitted Variable ov ∼ N (0, 1)
+• Generiere die endogene Variable als d = 12+π1z+1/2ov+ε, wobei π1 = 1 und ε ∼ N(0,2)
+• Generiere die abha ̈ngige Variable als y = β0+β1d+β2z+β3ov+u, wobei β0 = 6, β1 = 1/10, β2 = 1/100, β3 = 1/2 und u ∼ N(0,1/2)
+
+Ab Aufgabe 2.2 nehmen wir an, dass ov zwar fuer die Generierung von d und y zur Verfuegung steht, nicht aber fuer die Analysen. Sie können Simulation Start.R als Grundlagezur Bearbeitung der folgenden Aufgaben verwenden.
+
+```{r}
+set.seed(1234)
+
+n <- 3000
+pi1 <- 1
+b0 <- 6
+b1 <- 1/10
+b2 <- 1/100
+b3 <- 1/2
+
+z <- rbinom(n,1,0.7)
+ov <- rnorm(n,0,1)
+
+d <- 12 + pi1 * z + 1/2 * ov + rnorm(n,0,2)
+y <- b0 + b1 * d + b2 * z + b3 * ov + rnorm(n,0,1/2)
+```
+
+### Teilfrage 2.1
+Ist z in diesem DGP eine valide Instrumentalvariable? Nutzen Sie sowohl formale Argumente, als auch die synthetische Stichprobe von Simulation.R für Ihre Argumentation.
+
+Wir wissen von Teilfrage 1.5, dass damit z eine valide IV ist, muss COV(z,d) ungleich 0 sein. Weiters muss COV(z,u) = 0 sein.
+
+```{r}
+cov(z,d)
+```
+
+
+```{r}
+ols2.1 <- lm(d ~ z)
+summary(ols2.1)
+```
+Die erste Annahme der IV haben wir nun getestet. Die COV(z,d) ungleich 0, und das Result ist auf einem 0.01 Niveau Signifikant.
+Da wir die Exogenitätsannhame nicht testen können, müssen wir argumentieren, dass es keine Korrelation zwischen dem Fehlerterm und der IV gibt. Wir sehen, dass die Verteilung Binomialverteilt ist, deswegen können wir annehmen, dass es keine Korrelation zwischen Fehlerterm und IV gibt. 
+
+### Teilfrage 2.2
+Zeigen Sie die Ergebnisse der OLS Regression y = β0+β1d+v. Wie gross ist die Abweichung vom wahren Wert?
+
+```{r}
+ols2.2 <- lm(y ~ d)
+summary(ols2.2)
+```
+Im Simulationsstart wurden uns die wahren Werte von b0 und b1 gegeben,die Abweichung vom wahren und geschätzten Achsenabschnitt ist also 0.699027. Der wahre Wert wird unterschätzt. Die Abweichung vom wahren und geschätzten Steigungsparameter ist -0.056187.Hier wird der wahre Wert überschätzt.
+
+### Teilfrage 2.3
+Zeigen Sie die Ergebnisse der IV Regression, in der Sie z als Instrument für d verwenden. Wie gross ist die Abweichung vom wahren Wert?
+
+```{r}
+ols2.3 <- ivreg(y ~ d | z)
+summary(ols2.3)
+```
+Hier ist die Abweichung von dem wahren Achsenabschnitt 0.88772. Die Abweichung vom wahren Steigungsparameter -0.07101.Hier ist die Abweichung bei beiden Werten höher als zuvor. Ausserdem hat sich das Signifikanzniveau von d verschlechtert im vergleich zur Regression von 2.2.
+
+### Teilfrage 2.4
+
+Berechnen Sie explizit (also ohne Packages) die 95%-Konfidenzintervalle für βˆ1 aus Tei- laufgaben 2.2 und 2.3. Überprü̈fen Sie, ob der wahre Wert von β1 innerhalb des Intervalls liegt? (den kritischen Wert c bekommen Sie über die R Funktion qt()).
+
+Zuerst berechnen wir das Konfidenzintervall für Teilfrage 2.2
+```{r}
+c2.2 <- qt(0.05/2, df = 2998)
+print(c2.2)
+```
+
+```{r}
+b12.2 <- 0.156187
+c2.2 <- 1.96
+seb12.2 <- 0.006072
+linksintervall2.2 <- b12.2-c2.2*seb12.2
+rechtsintervall2.2 <-b12.2+c2.2*seb12.2
+
+print(linksintervall2.2)
+print(rechtsintervall2.2)
+```
+Das Konfidenzintervall von beta1 in 2.2 ist (0.1442;0.1680). Das wahre beta1 beträgt aber 0.1, und liegt deshlab nicht im Konfidenzintervall drinnen.
+
+
+Hier berechnen wir das Konfidenzintervall für Teilfrage 2.3
+```{r}
+c2.3 <- qt(0.05/2, df = 2998)
+print(c2.3)
+```
+
+```{r}
+c2.3 <- 1.96
+b12.3 <- 0.17101
+seb12.3 <- 0.03183
+linksintervall2.3 <- b12.3-c2.3*seb12.3
+rechtsintervall2.3 <-b12.3+c2.3*seb12.3
+print(linksintervall2.3)
+print(rechtsintervall2.3)
+```
+Das Konfidenzintervall von beta1 in 2.3 ist (0.1086;0.2333). Das wahre beta1 beträgt aber 0.1, und liegt deshlab nicht im Konfidenzintervall drinnen.
+
+
+### Teilfrage 2.5
+```{r}
+library(Greg)
+library(sandwich)
+library(patchwork)
+library(lmtest)
+library(ggplot2)
+library(dplyr)
+```
+
+
+Analysieren Sie in einer Simulationsstudie, wie die Verzerrung und die Coverage Rate (95%) des IV-Scha etzers mit der Staerke des Instruments variiert. Implementieren Sie dazu folgende Schritte:
+
+#### Teilfrage 2.5.1
+
+Schreiben Sie einen Loop, in dem der DGP gleich bleibt, nur dass sich π1 von 1 auf 0.1 in Schritten von 0.01 verringert.
+
+```{r}
+π1 <- 1
+while (π1 >= 0.1) {
+  π1 <- π1 - 0.01
+  print(π1)
+}
+```
+
+#### Teilfrage 2.5.2
+
+Ziehen Sie für jeden Wert von π1 1000 Stichproben (benötigt normalerweise einen Loop im Loop) und berechnen Sie Verzerrung und Coverage Rate (95%) des OLS und IV-Schätzers für jeden π1-Wert.
+
+```{r error=TRUE, message=TRUE, warning=TRUE}
+
+set.seed(4321)
+draws <- 1000
+
+π1 <- seq(from = 1, to = 0.1, by = -0.01)
+
+l1 = length(π1)
+
+ringtoss2.2 <- matrix(NA, l1, 2)
+ringtoss2.3 <- matrix(NA, l1, 2)
+verzerrung2.2 <- matrix(NA, l1, 2)
+verzerrung2.3 <- matrix(NA, l1, 2)
+coverage2.2 <- matrix(NA, l1, 2)
+coverage2.3 <- matrix(NA, l1, 2)
+
+colnames(verzerrung2.2) <- c("b0","b1")
+colnames(verzerrung2.3) <- c("b0","b1")
+colnames(coverage2.2) <- c("CI0","CI1")
+colnames(coverage2.3) <- c("CI0","CI1")
+
+for (i in 1:length(π1)) {
+
+  coverage2.2 <- matrix(NA,draws, 4)
+  coverage2.3 <- matrix(NA,draws, 4)
+  verzerrungstemp2.2 <- matrix(NA,draws, 2)
+  verzerrungstemp2.3 <- matrix(NA,draws, 2)
+
+  colnames(coverage2.2) <- c("up0", "low0", "up1", "low1")
+  colnames(coverage2.3) <- c("up0", "low0", "up1", "low1")
+  colnames(verzerrungstemp2.2) <- c("b0", "b1")
+  colnames(verzerrungstemp2.3) <- c("b0", "b1")
+ 
+  for (j in 1:draws) {
+    
+    d <- 12 + π1[i] * z + 1/2 * ov + rnorm(n,0,2)
+    y <- b0 + b1 * d + b2 * z + b3 * ov + rnorm(n,0,1/2)
+  
+    temp <- lm(y ~ d)
+    coverage2.2[j, ] <- as.vector(t(confint(temp)))
+    verzerrungstemp2.2[j, ] <- as.vector(summary(temp)$coefficient[,"Estimate"])
+    
+    temp <- ivreg(y ~ d | z)
+    coverage2.3[j, ] <- as.vector(t(confint(temp)))
+    verzerrungstemp2.3[j, ] <- as.vector(summary(temp)$coefficient[,"Estimate"])
+  }
+
+  ringtoss2.2[i, 1] <- mean(coverage2.2[, 1] <= b0 & b0 <= coverage2.2[, 2])
+  ringtoss2.2[i, 2] <- mean(coverage2.2[, 3] <= b1 & b1 <= coverage2.2[, 4])
+  ringtoss2.3[i, 1] <- mean(coverage2.3[, 1] <= b0 & b0 <= coverage2.3[, 2])
+  ringtoss2.3[i, 2] <- mean(coverage2.3[, 3] <= b1 & b1 <= coverage2.3[, 4])
+  verzerrung2.2[i, 1] <- mean(verzerrungstemp2.2[, 1])
+  verzerrung2.2[i, 2] <- mean(verzerrungstemp2.2[, 2])
+  verzerrung2.3[i, 1] <- mean(verzerrungstemp2.3[, 1])
+  verzerrung2.3[i, 2] <- mean(verzerrungstemp2.3[, 2])
+}
+```
+
+
+#### Teilfrage 2.5.3
+
+Stellen Sie die Verzerrung und Coverage Rate der beiden Schätzer in Abhängigkeit von π1 in geeigneten Grafiken dar.
+
+Zuerst berechnen wir die Coverage von b0
+```{r}
+df1 <- data.frame(x = π1, cover = ringtoss2.2[, 1])
+df2 <- data.frame(x = π1, cover = ringtoss2.3[, 1])
+df3 <- data.frame(x = π1, cover = ringtoss2.2[, 2])
+df4 <- data.frame(x = π1, cover = ringtoss2.3[, 2])
+
+df <- 
+  df1 %>%
+  mutate(Type = "Coverage OLS") %>%
+  bind_rows(df2 %>% mutate(Type = "Coverage IV")) 
+  
+
+ggplot(df, aes(y = cover, x = x, color = Type)) +
+  geom_line(size = 1) +
+  geom_hline(yintercept = 0.95) +
+  labs(
+    x = "π1",
+    y = "Coverage",
+    title = "Coverage von Beta0"
+  ) +
+  theme_light()
+```
+
+Jetzt berechnen wir die Coverage von b1
+
+```{r}
+df1 <- data.frame(x = π1, cover = ringtoss2.2[, 1])
+df2 <- data.frame(x = π1, cover = ringtoss2.3[, 1])
+df1 <- data.frame(x = π1, cover = ringtoss2.2[, 2])
+df2 <- data.frame(x = π1, cover = ringtoss2.3[, 2])
+
+df <- 
+  df1 %>%
+  mutate(Type = "Coverage OLS") %>%
+  bind_rows(df2 %>% mutate(Type = "Coverage IV")) 
+  
+
+ggplot(df, aes(y = cover, x = x, color = Type)) +
+  geom_line(size = 1) +
+  geom_hline(yintercept = 0.95) +
+  labs(
+    x = "π1",
+    y = "Coverage",
+    title = "Coverage von Beta1"
+  ) +
+  theme_light()
+```
+
+Jetzt berechnen wir die Verzerrung von b0
+
+```{r}
+df3 <- data.frame(x = π1, cover = verzerrung2.2[, 1])
+df4 <- data.frame(x = π1, cover = verzerrung2.3[, 1])
+df5 <- data.frame(x = π1, cover = verzerrung2.2[, 2])
+df6 <- data.frame(x = π1, cover = verzerrung2.3[, 2])
+
+df <- 
+  df3 %>%
+  mutate(Type = "OLS Schätzer") %>%
+  bind_rows(df4 %>% mutate(Type = "IV Schätzer")) 
+
+dfbias <- df %>%
+  mutate(df$cover - b0)
+
+
+ggplot(dfbias, aes(y = df$cover - b0 , x = x, color = Type)) +
+  geom_line(size = 1) +
+  geom_hline(yintercept = 0) +
+  labs(
+    x = "π1",
+    y = "Verzerrung",
+    title = "Verzerrung von Beta0"
+  ) +
+  theme_light()
+```
+Zuletzt, berechnen wir die Verzerrung von b1
+
+```{r}
+df3 <- data.frame(x = π1, verzerrung = verzerrung2.2[, 1])
+df4 <- data.frame(x = π1, verzerrung = verzerrung2.3[, 1])
+df5 <- data.frame(x = π1, verzerrung = verzerrung2.2[, 2])
+df6 <- data.frame(x = π1, verzerrung = verzerrung2.3[, 2])
+
+df <- 
+  df5 %>%
+  mutate(Type = "OLS Schätzer") %>%
+  bind_rows(df6 %>% mutate(Type = "IV Schätzer")) 
+
+dfbias <- df %>%
+  mutate(df$verzerrung - b1)
+
+
+ggplot(dfbias, aes(y = df$verzerrung - b1, x = x, color = Type)) +
+  geom_line(size = 1) +
+  geom_hline(yintercept = 0) +
+  labs(
+    x = "π1",
+    y = "Verzerrung",
+    title = "Verzerrung von Beta1"
+  ) +
+  theme_light()
+```
+
+
+#### Teilfrage 2.5.4
+
+Erklären Sie Ihre Ergebnisse anhand formaler Argumente.
+
+Durch die Simulation erkennen wir, wie die Coverage- und Verzerrungsraten mit der Stärke des Instruments variieren
+
+Indem wir die Coverage berechnen, messen wir wie häufig der Wahre wert in das Konfidenzintervall fällt (deshalb auch ringtoss). Hier merken wir, dass mit einer normalen OLS Regression , in 0 von 100 der Stichproben der wahre Wert innerhalb des Konfidenzintervalls liegt. Mit der IV Regression, liegt in fast 100 von 100 der Stichproben der wahre Wert innerhalb des KI. Eigentlich sollten wir für ein Konfidenzniveau von 95% erwarten, dass in 95% der Stichproben der wahre Wert innerhalb des Konfidenzintervalls liegt. Da wir mit der IV Regression mehr als 95% bekommen, heisst das, dass unser Standardfehler zu gross ist. Bei unserer normalen OLS Regression fällt der wahre Wert aber selterne als erwartet ins KI. Das heisst, dass der Schätzer entweder verzerrt ist, und/oder die Standardfehler sind zu klein. 
+Trotzdem ist es besser wenn wir die IV Regression benutzten anstatt die normale OLS Regression, weil es besser wäre zu konservativ zu schätzen, anstatt falsch(verzerrt) zu schätzen.
+
+Auch bei den Grafiken von Verzerrung, sehen wir dass die IV Regression innerhalb des Verlaufs von π1 näher an den erwarteten Wert kommt. Die normale Regression bleibt konstant. Deshalb ist es schlauer, für die Verzerrung auch die IV Regression zu benutzten. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
